@@ -1,0 +1,157 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Dashboard</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
+  </head>
+
+  <body>
+    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
+      <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Toyota Corolla</a>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+        <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+          <div class="sidebar-sticky">
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <a class="nav-link active" href="#">
+                  <span data-feather="home"></span>
+                  Dashboard <span class="sr-only">(current)</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">
+                  <span data-feather="file"></span>
+                  Orders
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">
+                  <span data-feather="shopping-cart"></span>
+                  Products
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">
+                  <span data-feather="users"></span>
+                  Customers
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">
+                  <span data-feather="bar-chart-2"></span>
+                  Reports
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">
+                  <span data-feather="layers"></span>
+                  Integrations
+                </a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+            <h1 class="h2">Dashboard</h1>
+
+            
+          </div>
+
+          <div class="btn-group" role="group" aria-label="Basic example">
+            <button id='blinkButtoLeftn' type="button" class="btn btn-secondary">Blinker Left</button>
+          </div>
+
+          <div class="btn-group" role="group" aria-label="Basic example">
+            <button id='dimButton' type="button" class="btn btn-secondary">Daylight</button>
+            <button id='beamButton' type="button" class="btn btn-secondary">High Beam</button>
+          </div>
+
+          <div class="btn-group" role="group" aria-label="Basic example">
+            <button id='blinkButtonRight' type="button" class="btn btn-secondary">Blinker Right</button>
+          </div>
+
+            <br /><br />
+
+          <div id="data" />
+        </main>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="{{ url_for('static', filename='js/jquery-3.2.1.slim.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+    <!-- Icons -->
+    <script src="{{ url_for('static', filename='js/feather.min.js') }}"></script>
+    <script>
+      feather.replace()
+    </script>
+
+    <script>
+        $(document).ready(function() {
+
+            var source = new EventSource('/stream');
+            var data = document.getElementById('data');
+            source.onmessage = function(e) {
+
+                var splitted_data = e.data.split(':');
+                var device_name = splitted_data[0];
+                var device_subdevice = splitted_data[1];
+                var device_status = splitted_data[2];
+
+                if(device_name == 'LGT_REAR_RIGHT' && device_subdevice == 'BLINKERS'){
+                    if(device_status == 1){
+                        $('#blinkButtonRight').removeClass('btn-secondary');
+                        $('#blinkButtonRight').addClass('btn-warning');
+                    } else { 
+                        $('#blinkButtonRight').removeClass('btn-warning');
+                        $('#blinkButtonRight').addClass('btn-secondary');
+                    }
+                }
+
+                if(device_name == 'LGT_REAR_RIGHT' && device_subdevice == 'DIMLIGHT'){
+                    if(device_status == 1){
+                        $('#dimButton').removeClass('btn-secondary');
+                        $('#dimButton').addClass('btn-primary');
+                    } else { 
+                        $('#dimButton').removeClass('btn-primary');
+                        $('#dimButton').addClass('btn-secondary');
+                    }
+                }
+
+                if(device_name == 'LGT_REAR_RIGHT' && device_subdevice == 'FULLLIGHT'){
+                    if(device_status == 1){
+                        $('#beamButton').removeClass('btn-secondary');
+                        $('#beamButton').addClass('btn-primary');
+                    } else { 
+                        $('#beamButton').removeClass('btn-primary');
+                        $('#beamButton').addClass('btn-secondary');
+                    }
+                }
+
+                data.innerHTML = device_name + ' - ' + device_subdevice + ' - ' + device_status;
+                console.log(device_name);
+            };
+        });
+    </script>
+  </body>
+</html>
