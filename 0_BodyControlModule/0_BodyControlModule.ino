@@ -10,6 +10,8 @@
 // DIM, BRAKE, BLINK, NA, NA, NA, NA
 int data[7] = {0, 0, 0, 0, 0, 0, 0};
 
+int currentShiftPosition = 3;
+
 int button1State = HIGH;             
 int button2State = HIGH;            
 int lastButton1State = HIGH;  
@@ -26,6 +28,22 @@ bool is_blinking = false;
 struct can_frame canMsg;
 MCP2515 mcp2515(10);
 
+void changeGear(int shiftDirection){
+  switch(shiftDirection){
+    case 1:
+      currentShiftPosition++;
+      break;
+    case 0:
+      currentShiftPosition--;
+      break;
+  }
+
+  //SEND DATA TO STEERING WHEEL
+  data[0] = 1;
+  data[1] = currentShiftPosition;
+  send_can_message(0xAA, data);
+}
+
 
 void setup() 
 {
@@ -34,7 +52,7 @@ void setup()
   pinMode(LED1, OUTPUT);
   pinMode(LED2, OUTPUT);
   
-  Serial.begin(9600);
+  Serial.begin(115200);
   SPI.begin();               //Begins SPI communication
   
   mcp2515.reset();
@@ -51,59 +69,92 @@ void send_can_message(int can_id, int data[7]){
   }
   
   mcp2515.sendMessage(&canMsg);     //Sends the CAN message
-  Serial.println("Message Sent");
+}
+
+void checkSerialInput() {
+  if(Serial.available() > 0){
+    char serialInput = Serial.read();
+
+    if(serialInput == 'B'){
+        Serial.println("Blinking OFF");
+        data[0] = 2;
+        data[1] = 255;
+        data[2] = 255;
+        send_can_message(0xAA, data);
+    } 
+  }
 }
 
 void loop() 
 {
-  int btn1reading = digitalRead(BTN1);
-  int btn2reading = digitalRead(BTN2);
+  checkSerialInput(); 
   
-  if (btn1reading != lastButton1State) { lastDebounce1Time = millis(); }
-  if (btn2reading != lastButton2State) { lastDebounce2Time = millis(); }
-  
-  if ((millis() - lastDebounce1Time) > debounceDelay) {
-    if (btn1reading != button1State) {
-      button1State = btn1reading;
-      
-      if (button1State == LOW) {
-        Serial.println("Button 1 pressed");
-        if(!dimlight){ 
-          dimlight = true; 
-          digitalWrite(LED1, HIGH);
-          Serial.println("Turning on light");
-          data[0] = 1;
-          send_can_message(CAN_ID_REAR_LIGHT_RIGHT, data); 
-        } else { 
-          dimlight = false; 
-          digitalWrite(LED1, LOW); 
-          Serial.println("Turning off light");
-          data[0] = 0;
-          send_can_message(CAN_ID_REAR_LIGHT_RIGHT, data); 
-        } 
-      }
-    }
-  }
+  if (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK) // To receive data (Poll Read)
+  {
+    Serial.print(canMsg.can_id, HEX);
+    
+    switch(canMsg.can_id){
+      case 0xAA:                                // STEERING WHEEL 
+        
+        if(canMsg.data[0] == 0)                 // PULL
+        {
+          Serial.print(":PULL");
 
-  if ((millis() - lastDebounce2Time) > debounceDelay) {
-    if (btn2reading != button2State) {
-      button2State = btn2reading;
-      
-      if (button2State == LOW) {
-        Serial.println("Button 2 pressed");
-          is_blinking = true; 
-          digitalWrite(LED2, HIGH);
-          Serial.println("Turning on blinker");
-          data[2] = 1;
-          send_can_message(CAN_ID_REAR_LIGHT_RIGHT, data);
-      } else {
-        Serial.println("Button 2 released");
-        data[2] = 0;
-        send_can_message(CAN_ID_REAR_LIGHT_RIGHT, data);
-      }
+          switch(canMsg.data[1]){                 // WHICH REQUEST
+              case 0:                               // CURRENT GEAR
+                Serial.print(":CURRENT-GEAR");
+                data[0] = 1;
+                data[1] = currentShiftPosition;
+                send_can_message(canMsg.can_id, data);
+                break;
+          }
+          
+        } else {                                //PUSH
+            Serial.print(":PUSH");
+            
+            switch(canMsg.data[1]){               // WHICH BUTTON
+              case 0:                               // BTN MODE
+                Serial.print(":BTN-MODE");
+                break;
+              case 1:                               // BTN OK
+                Serial.print(":BTN-OK");
+                break;
+              case 2:                               // BTN FLIPPER LEFT
+                Serial.print(":BTN-FLIPPER-LEFT");
+                changeGear(0);
+                break;
+              case 3:                               // BTN MODE
+                Serial.print(":BTN-VOICE");
+                break;
+              case 4:                               // BTN OK
+                Serial.print(":BTN-VOLUME");
+                break;
+              case 5:                               // BTN FLIPPER LEFT
+                Serial.print(":BTN-FLIPPER-RIGHT");
+                changeGear(1);
+                break;
+              case 6:                               // BTN FLIPPER LEFT
+                Serial.print(":ROTARY-UP");
+                break;
+              case 7:                               // BTN FLIPPER LEFT
+                Serial.print(":ROTARY-DOWN");
+                break;
+            }
+            switch(canMsg.data[2]){               // WHICH ACTION
+              case 0:                               // ACTION RELEASE
+                Serial.print(":RELEASE");
+                break;
+              case 1:                               // ACTION PRESS
+                Serial.print(":PRESS");
+                break;
+              case 2:                               // ACTION HOLD
+                Serial.print(":HOLD");
+                break;
+            }
+        }
+        
     }
-  }
 
-  lastButton1State = btn1reading;
-  lastButton2State = btn2reading;
+    Serial.println(":##");
+  }
 }
