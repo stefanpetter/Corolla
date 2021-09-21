@@ -29,37 +29,37 @@
               <li class="nav-item">
                 <a class="nav-link active" href="#">
                   <span data-feather="home"></span>
-                  Dashboard <span class="sr-only">(current)</span>
+                  Never <span class="sr-only">(current)</span>
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="#">
                   <span data-feather="file"></span>
-                  Orders
+                  Gonna
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="#">
                   <span data-feather="shopping-cart"></span>
-                  Products
+                  Give
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="#">
                   <span data-feather="users"></span>
-                  Customers
+                  You
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="#">
                   <span data-feather="bar-chart-2"></span>
-                  Reports
+                  Up
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="#">
                   <span data-feather="layers"></span>
-                  Integrations
+                  <3
                 </a>
               </li>
             </ul>
@@ -113,43 +113,47 @@
             var data = document.getElementById('data');
             source.onmessage = function(e) {
 
-                var splitted_data = e.data.split(':');
-                var device_name = splitted_data[0];
-                var device_subdevice = splitted_data[1];
-                var device_status = splitted_data[2];
+                var CanMessage = e.data.split(':');
+                var CanId = CanMessage[0];
+                var CanDirection = CanMessage[1];
+                var CanDevice = CanMessage[2];
+                var CanAction = CanMessage[3];
+                var CanAdditional = CanMessage[4];
 
-                if(device_name == 'LGT_REAR_RIGHT' && device_subdevice == 'BLINKERS'){
-                    if(device_status == 1){
-                        $('#blinkButtonRight').removeClass('btn-secondary');
-                        $('#blinkButtonRight').addClass('btn-warning');
-                    } else { 
-                        $('#blinkButtonRight').removeClass('btn-warning');
-                        $('#blinkButtonRight').addClass('btn-secondary');
-                    }
+                // if(device_name == 'LGT_REAR_RIGHT' && device_subdevice == 'BLINKERS'){
+                //     if(device_status == 1){
+                //         $('#blinkButtonRight').removeClass('btn-secondary');
+                //         $('#blinkButtonRight').addClass('btn-warning');
+                //     } else { 
+                //         $('#blinkButtonRight').removeClass('btn-warning');
+                //         $('#blinkButtonRight').addClass('btn-secondary');
+                //     }
+                // }
+
+                // if(device_name == 'LGT_REAR_RIGHT' && device_subdevice == 'DIMLIGHT'){
+                //     if(device_status == 1){
+                //         $('#dimButton').removeClass('btn-secondary');
+                //         $('#dimButton').addClass('btn-primary');
+                //     } else { 
+                //         $('#dimButton').removeClass('btn-primary');
+                //         $('#dimButton').addClass('btn-secondary');
+                //     }
+                // }
+
+                // if(device_name == 'LGT_REAR_RIGHT' && device_subdevice == 'FULLLIGHT'){
+                //     if(device_status == 1){
+                //         $('#beamButton').removeClass('btn-secondary');
+                //         $('#beamButton').addClass('btn-primary');
+                //     } else { 
+                //         $('#beamButton').removeClass('btn-primary');
+                //         $('#beamButton').addClass('btn-secondary');
+                //     }
+                // }
+                if(CanDirection == 'PUSH'){
+                  data.innerHTML = e.data;
+                  console.log(CanMessage);
                 }
-
-                if(device_name == 'LGT_REAR_RIGHT' && device_subdevice == 'DIMLIGHT'){
-                    if(device_status == 1){
-                        $('#dimButton').removeClass('btn-secondary');
-                        $('#dimButton').addClass('btn-primary');
-                    } else { 
-                        $('#dimButton').removeClass('btn-primary');
-                        $('#dimButton').addClass('btn-secondary');
-                    }
-                }
-
-                if(device_name == 'LGT_REAR_RIGHT' && device_subdevice == 'FULLLIGHT'){
-                    if(device_status == 1){
-                        $('#beamButton').removeClass('btn-secondary');
-                        $('#beamButton').addClass('btn-primary');
-                    } else { 
-                        $('#beamButton').removeClass('btn-primary');
-                        $('#beamButton').addClass('btn-secondary');
-                    }
-                }
-
-                data.innerHTML = device_name + ' - ' + device_subdevice + ' - ' + device_status;
-                console.log(device_name);
+               
             };
         });
     </script>
